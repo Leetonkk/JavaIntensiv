@@ -25,9 +25,16 @@ public class CurrencyDataManager {
     public void addCurrency(String currencyName, DataReader reader) throws IOException, CsvException {
         String filePath = sourceFolder + currencyName;
         if (!this.data.containsKey(currencyName)) {
-            List<String[]> fileData = reader.readFile(filePath);
-            availableCurrencies.add(currencyName);
-            this.data.put(currencyName, fileData);
+            List<String[]> fileData = null;
+            try {
+                fileData = reader.readFile(filePath);
+                availableCurrencies.add(currencyName);
+                this.data.put(currencyName, fileData);
+            } catch (NullPointerException e) {
+                System.out.println("Валюта " + currencyName + " не будет доступна");
+            }
+
+
         }
     }
 
@@ -55,7 +62,7 @@ public class CurrencyDataManager {
 
     public void checkOperationAvailability(String operation) throws IncorrectQueryException {
         if (!EnumUtils.isValidEnum(CurrencyOperationsMethods.class, operation)) {
-            throw new IncorrectQueryException("Данная операция не поддерживается", operation);
+            throw new IncorrectQueryException("Данная операция не поддерживается: ", operation);
         }
     }
 

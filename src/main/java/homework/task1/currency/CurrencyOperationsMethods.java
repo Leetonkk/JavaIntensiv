@@ -13,11 +13,11 @@ public enum CurrencyOperationsMethods {
         private final int DAY = 1;
 
         @Override
-        public List<String[]> call(CurrencyOperator cp, List<String[]> data, String[] args) {
+        public List<String[]> call(CurrencyOperator cp, List<String[]> data, String[] args) throws IncorrectQueryException {
+            List<String[]> result;
             try {
                 checkRateOperation(args);
                 String period = args[0];
-                List<String[]> result;
                 if (period.equals("week")) {
                     result = cp.rateByAverage(data, DAYS_IN_WEEK, DAYS_IN_WEEK);
                 } else {
@@ -25,21 +25,19 @@ public enum CurrencyOperationsMethods {
                 }
                 return result;
             } catch (IncorrectQueryException ex) {
-                System.out.println(ex.getMessage() + ex.getIncorrectArgument());
-                return data;
+                throw new IncorrectQueryException(ex.getMessage(), ex.getIncorrectArgument());
             }
         }
 
         public void checkRateOperation(String[] args) throws IncorrectQueryException {
-            String period = args[0];
             if (args.length != ARGUMENTS_COUNT) {
                 throw new IncorrectQueryException("Неверное число аргументов для данной операции: ", Integer.toString(args.length));
-            } else if (!periods.contains(period)) {
-                throw new IncorrectQueryException("Некорректный период: ", period);
+            } else if (!periods.contains(args[0])) {
+                throw new IncorrectQueryException("Некорректный период: ", args[0]);
             }
 
         }
     };
 
-    public abstract List<String[]> call(CurrencyOperator cp, List<String[]> data, String[] arguments);
+    public abstract List<String[]> call(CurrencyOperator cp, List<String[]> data, String[] arguments) throws IncorrectQueryException;
 }
