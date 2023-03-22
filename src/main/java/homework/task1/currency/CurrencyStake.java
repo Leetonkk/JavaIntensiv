@@ -11,7 +11,9 @@ public class CurrencyStake {
     private String rate;
     @CsvBindByName(column = "cdx")
     private String name;
-    public CurrencyStake() {}
+
+    public CurrencyStake() {
+    }
 
     public CurrencyStake(String nominal, String date, String rate, String name) {
         this.nominal = nominal;
@@ -23,9 +25,11 @@ public class CurrencyStake {
     public String getNominal() {
         return nominal;
     }
+
     public String getName() {
         return name;
     }
+
     public String getDate() {
         return date;
     }

@@ -9,8 +9,6 @@ import java.util.List;
 
 public class CurrencyOperator {
     public List<CurrencyStake> rateByAverage(List<CurrencyStake> data, int period, int range) {
-        System.out.println(data.get(0).getRate());
-        System.out.println("++++++++++=");
         List<CurrencyStake> currencyData = new ArrayList<>(data.subList(0, range + 1));
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         List<CurrencyStake> resultData = new ArrayList<>();
@@ -19,13 +17,9 @@ public class CurrencyOperator {
             BigDecimal avg = BigDecimal.valueOf(0);
             for (int j = 0; j < range; j++) {
                 BigDecimal rate = new BigDecimal(currencyData.get(j).getRate().replace(",", "."));
-                System.out.println(rate);
                 avg = avg.add(rate);
             }
-            System.out.println("=======");
             avg = avg.divide(BigDecimal.valueOf(range), new MathContext(6));
-            System.out.println(avg);
-            System.out.println("-----------------");
             CurrencyStake stake = new CurrencyStake(
                     currencyData.get(i).getNominal(),
                     date.format(dateFormatter),
