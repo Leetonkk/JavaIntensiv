@@ -1,39 +1,38 @@
 package homework.task1.currency;
 
-import java.text.DecimalFormat;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class CurrencyOperator {
-    private final String CURS_HEADER = "curs";
-    private final String DATE_HEADER = "data";
-
-    public List<String[]> rateByAverage(List<String[]> data, int period, int range) {
-        List<String[]> currencyData = data.subList(0, range + 1);
-        List<String[]> filterData = new ArrayList<>();
+    public List<CurrencyStake> rateByAverage(List<CurrencyStake> data, int period, int range) {
+        System.out.println(data.get(0).getRate());
+        System.out.println("++++++++++=");
+        List<CurrencyStake> currencyData = new ArrayList<>(data.subList(0, range + 1));
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        DecimalFormat currencyFormatter = new DecimalFormat("#0.0000");
-        String[] headers = currencyData.remove(0);
-        int dateIndex = Arrays.asList(headers).indexOf(DATE_HEADER);
-        int cursIndex = Arrays.asList(headers).indexOf(CURS_HEADER);
-        for (int i = 0; i < currencyData.size(); i++) {
-            filterData.add(new String[]{currencyData.get(i)[dateIndex], currencyData.get(i)[cursIndex]});
-        }
-        List<String[]> resultData = new ArrayList<>();
-        LocalDate date = LocalDate.now();
+        List<CurrencyStake> resultData = new ArrayList<>();
+        LocalDate date = LocalDate.now().plusDays(1);
         for (int i = 0; i < period; i++) {
-            String[] row = new String[2];
-            double avg = 0;
+            BigDecimal avg = BigDecimal.valueOf(0);
             for (int j = 0; j < range; j++) {
-                avg += Double.parseDouble(filterData.get(j)[1].replace(",", "."));
+                BigDecimal rate = new BigDecimal(currencyData.get(j).getRate().replace(",", "."));
+                System.out.println(rate);
+                avg = avg.add(rate);
             }
-            row[0] = date.format(dateFormatter);
-            row[1] = currencyFormatter.format(avg / range).replace(".", ",");
-            filterData.set(0, row);
-            resultData.add(row);
+            System.out.println("=======");
+            avg = avg.divide(BigDecimal.valueOf(range), new MathContext(6));
+            System.out.println(avg);
+            System.out.println("-----------------");
+            CurrencyStake stake = new CurrencyStake(
+                    currencyData.get(i).getNominal(),
+                    date.format(dateFormatter),
+                    avg.toString(),
+                    currencyData.get(i).getName());
+            currencyData.add(0, stake);
+            resultData.add(stake);
             date = date.plusDays(1);
         }
         return resultData;

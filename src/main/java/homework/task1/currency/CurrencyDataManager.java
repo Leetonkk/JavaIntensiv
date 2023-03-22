@@ -1,74 +1,95 @@
 package homework.task1.currency;
 
-import com.opencsv.exceptions.CsvException;
-import homework.task1.customExceptions.IncorrectQueryException;
+import homework.task1.dataReaders.CsvDataReader;
 import homework.task1.dataReaders.DataReader;
-import org.apache.commons.lang3.EnumUtils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.lang.reflect.Method;
+import java.util.*;
 
 public class CurrencyDataManager {
-    private final String sourceFolder;
-    private CurrencyOperator currencyOperator;
-    private ArrayList<String> availableCurrencies = new ArrayList<>();
-    private HashMap<String, List<String[]>> data = new HashMap<>();
+    private final DataReader reader;
+    private final CurrencyOperator currencyOperator = new CurrencyOperator();
+    private final CurrencyOperationsMethods currencyOperationsMethods = new CurrencyOperationsMethods();
+    private final List<String> availableCurrencies = new ArrayList<>();
+    private final HashMap<String, List<CurrencyStake>> data = new HashMap<>();
 
-    public CurrencyDataManager(String sourceFolder, CurrencyOperator currencyOperator) {
-        this.sourceFolder = sourceFolder;
-        this.currencyOperator = currencyOperator;
+
+    public CurrencyDataManager(CsvDataReader reader) {
+        this.reader = reader;
     }
 
-    public void addCurrency(String currencyName, DataReader reader) throws IOException, CsvException {
-        String filePath = sourceFolder + currencyName;
-        if (!this.data.containsKey(currencyName)) {
-            List<String[]> fileData = null;
-            try {
-                fileData = reader.readFile(filePath);
-                availableCurrencies.add(currencyName);
-                this.data.put(currencyName, fileData);
-            } catch (NullPointerException e) {
-                System.out.println("Валюта " + currencyName + " не будет доступна");
+    public void start() {
+        List<String> currencies = List.of("USD", "TRY", "EUR"); // заданы руками, не знаю куда их засунуть
+        // могу предположить что в какие нибудь проперти проекта, как начальные агрументы
+        for (String currency : currencies) {
+            this.addCurrency("currencies/", currency);
+        }
+        while (true) {
+            Scanner in = new Scanner(System.in);
+            String query = in.nextLine();
+            if ("stop".equalsIgnoreCase(query)) {
+                break;
             }
+            this.executeQuery(query);
+        }
 
+    }
 
+    public void addCurrency(String folder, String currencyName) {
+        String filePath = folder + currencyName;
+        if (!data.containsKey(currencyName)) {
+            List<CurrencyStake> fileData = reader.readFile(filePath);
+            if (fileData != null) {
+                availableCurrencies.add(currencyName);
+                data.put(currencyName, fileData);
+            } else {
+                System.out.println("Данная валюта не доступна: " + currencyName);
+            }
         }
     }
 
     public void executeQuery(String query) {
-        String[] queryElements = query.split(" ");
-        String operation = queryElements[0];
-        String currency = queryElements[1];
+
         try {
-            checkOperationAvailability(operation);
+            String[] queryElements = query.split(" ");
+            String operation = queryElements[0];
+            String currency = queryElements[1];
             checkCurrencyAvailability(currency);
-            List<String[]> resultData = CurrencyOperationsMethods.valueOf(operation).call(
-                    currencyOperator,
-                    this.data.get(currency),
-                    Arrays.copyOfRange(queryElements, 2, queryElements.length
-                    ));
+            Method m = getCurrencyMethod(operation);
+            if (m != null) {
+                List<CurrencyStake> resultData = (List<CurrencyStake>) m.invoke(
+                        currencyOperationsMethods,
+                        currencyOperator,
+                        data.get(currency),
+                        Arrays.copyOfRange(queryElements, 2, queryElements.length
+                        ));
+                if (resultData != null) {
+                    new CurrencyDataFormatter().printDataDefaultFormat(resultData);
+                }
+            } else {
+                throw new Exception("Данная операция не поддерживается: " + operation);
+            }
 
-            CurrencyDataFormatter dataFormatter = new CurrencyDataFormatter();
-            dataFormatter.printDataDefaultFormat(resultData);
-
-        } catch (IncorrectQueryException ex) {
-            System.out.println(ex.getMessage() + ex.getIncorrectArgument());
+        } catch (IndexOutOfBoundsException ex) {
+            System.out.println("Недостаточное количество агрументов");
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
         }
-
     }
 
-    public void checkOperationAvailability(String operation) throws IncorrectQueryException {
-        if (!EnumUtils.isValidEnum(CurrencyOperationsMethods.class, operation)) {
-            throw new IncorrectQueryException("Данная операция не поддерживается: ", operation);
+    public Method getCurrencyMethod(String operation) {
+        Method[] allMethods = CurrencyOperationsMethods.class.getDeclaredMethods();
+        for (Method m : allMethods) {
+            if (m.getName().equals(operation)) {
+                return m;
+            }
         }
+        return null;
     }
 
-    public void checkCurrencyAvailability(String currency) throws IncorrectQueryException {
+    public void checkCurrencyAvailability(String currency) throws Exception {
         if (!availableCurrencies.contains(currency)) {
-            throw new IncorrectQueryException("Данная валюта не найдена: ", currency);
+            throw new Exception("Данная валюта не найдена: " + currency);
         }
     }
 }
