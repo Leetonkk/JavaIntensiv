@@ -1,21 +1,28 @@
-package homework.task1.currency;
+package homework.task1.currency.entities;
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvCustomBindByName;
+import com.opencsv.bean.CsvDate;
+import homework.task1.currency.dataReaders.converters.StringToBigDecimal;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public class CurrencyStake {
     @CsvBindByName
     private String nominal;
     @CsvBindByName(column = "data")
-    private String date;
-    @CsvBindByName(column = "curs")
-    private String rate;
+    @CsvDate(value = "dd.MM.yyyy")
+    private LocalDate date;
+    @CsvCustomBindByName(column = "curs", converter = StringToBigDecimal.class)
+    private BigDecimal rate;
     @CsvBindByName(column = "cdx")
     private String name;
 
     public CurrencyStake() {
     }
 
-    public CurrencyStake(String nominal, String date, String rate, String name) {
+    public CurrencyStake(String nominal, LocalDate date, BigDecimal rate, String name) {
         this.nominal = nominal;
         this.date = date;
         this.rate = rate;
@@ -30,11 +37,11 @@ public class CurrencyStake {
         return name;
     }
 
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public String getRate() {
+    public BigDecimal getRate() {
         return rate;
     }
 

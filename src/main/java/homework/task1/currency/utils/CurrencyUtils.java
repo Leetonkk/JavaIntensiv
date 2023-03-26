@@ -1,4 +1,4 @@
-package homework.task1.currency;
+package homework.task1.currency.utils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
