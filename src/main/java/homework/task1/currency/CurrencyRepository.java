@@ -1,5 +1,6 @@
 package homework.task1.currency;
 
+import homework.task1.currency.customExceptions.FileIsNotFoundException;
 import homework.task1.currency.dataReaders.CsvDataReader;
 import homework.task1.currency.entities.Currency;
 import homework.task1.currency.entities.CurrencyStake;
@@ -25,13 +26,14 @@ public class CurrencyRepository {
     public void addCurrency(String folder, Currency currency) {
         String currencyName = currency.toString();
         String filePath = folder + currencyName;
+
         if (!data.containsKey(currencyName)) {
-            List<CurrencyStake> fileData = reader.readFile(filePath);
-            if (fileData != null) {
+            try {
+                List<CurrencyStake> fileData = reader.readFile(filePath);
                 data.put(currencyName, fileData);
                 currency.setAvailable(true);
-            } else {
-                System.out.println("Данная валюта не доступна: " + currencyName);
+            } catch (FileIsNotFoundException ex) {
+                System.out.println(ex.getMessage() + currencyName);
                 currency.setAvailable(false);
             }
         }
